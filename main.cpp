@@ -3,16 +3,17 @@
 #include <windows.h>
 #include <conio.h>
 #include <time.h>
+#include <fstream>
 
 using namespace std;
 
-
-
+int WYSOKOSC,SZEROKOSC;
 const int wielkosc_ogona = 50;  //Maksymalna wielkosc Ogona
 int x=10, y= 10;    //Pozycja startowa
 int ogonX[wielkosc_ogona], ogonY[wielkosc_ogona];
 int ogon;               //Aktualna wielkosc ogona
-int jedzenieX,jedzenieY;        //Aktualna pozycja jaedzenie
+int jedzenieX,jedzenieY;        //Aktualna pozycja jaedzenia
+int PREDKOSC;
 
 enum Kierunek {LEWO,PRAWO,GORA,DOL};    //Kierunki
 Kierunek kierunek;      //Aktualny kierunek
@@ -25,18 +26,24 @@ void cls()
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursorPosition);
 }
 
+void Jedzenie()
+{
+    jedzenieX = rand() % SZEROKOSC;
+    jedzenieY = rand() % WYSOKOSC;
+}
+
 void Rysuj()
 {
-    cls();
+    cls();  //Czyszczenie ekranu
 
-    for(int i = 0; i < 26; i++)
+    for(int i = 0; i < WYSOKOSC+2; i++)
     {
-        cout << "#";
-        for(int j = 0; j < 25; j++)
+        cout << "#";    //Pierwsza linijka od lewej
+        for(int j = 0; j < SZEROKOSC; j++)
         {
-            if(i==0 || i==25)
+            if(i==0 || i==WYSOKOSC+1)
             {
-                cout<< "#";
+                cout<< "#"; //Jesli linijka jest na samej gorze albo na samym dole
             }
             else if(i==y && j==x)
             {
@@ -69,6 +76,14 @@ void Rysuj()
     }
 }
 
+void Koniec()
+{
+        x=10;
+        y=10;
+        Gra=false;
+        ogon=0;
+}
+
 void Ruch()
 {
     if(_kbhit())
@@ -90,15 +105,14 @@ void Ruch()
         }
     }
 
-    int pozX,pozY;
-    ogonX[0] = x;
-    ogonY[0] = y;
-
-    for (int i =ogon; i>0; i--)
+    for (int i = ogon; i>0; i--)
     {
         ogonX[i] = ogonX[i-1];
         ogonY[i] = ogonY[i-1];
     }
+
+    ogonX[0] = x;
+    ogonY[0] = y;
 
     switch(kierunek)
     {
@@ -116,46 +130,85 @@ void Ruch()
         break;
     }
 
-    if(x<=0 || x>25)
+    if(x<0 || x>SZEROKOSC)
     {
-        x=10;
-        y=10;
-        Gra=false;
+        Koniec();
     }
-    else if(y<=0 || y>25)
+    else if(y<=0 || y>WYSOKOSC)
     {
-        x=10;
-        y=10;
-        Gra=false;
+        Koniec();
     }
 
     for (int i =0;i<ogon;i++)
     {
         if(ogonX[i]==x && ogonY[i]==y)
         {
-            x=10;
-            y=10;
-            Gra=false;
+            Koniec();
         }
     }
 
     if(x==jedzenieX && y==jedzenieY)
     {
+        Jedzenie();
         ogon++;
     }
 }
 
+void Konfiguracja()
+{
+    fstream ustawienia;
+    string poczatkowy_kierunek;
+    ustawienia.open("ustawienia.txt");
+
+    int nrlinia=1;
+    string linia;
+
+    while(getline(ustawienia,linia))
+    {
+        switch(nrlinia)
+        {
+            case 1: poczatkowy_kierunek=linia; break;
+            case 2: WYSOKOSC= atoi(linia.c_str()); break;
+            case 3: SZEROKOSC=atoi(linia.c_str()); break;
+            case 4: PREDKOSC= atoi(linia.c_str()); break;
+        }
+        nrlinia++;
+    }
+
+    if(poczatkowy_kierunek=="GORA")
+    {
+        kierunek=GORA;
+    }
+    else if(poczatkowy_kierunek=="DOL")
+    {
+        kierunek=DOL;
+    }
+    else if(poczatkowy_kierunek=="LEWO")
+    {
+        kierunek=LEWO;
+    }
+    else if(poczatkowy_kierunek=="PRAWO")
+    {
+        kierunek=PRAWO;
+    }
+    else
+    {
+        kierunek=GORA;
+    }
+
+    ustawienia.close();
+    Jedzenie();
+}
+
 int main()
 {
-    kierunek=GORA;
-    jedzenieX= 5;
-    jedzenieY=5;
+    Konfiguracja();
 
     while(true)
     {
         Rysuj();
         Ruch();
-        Sleep(10);
+        Sleep(PREDKOSC);
     }
     return 0;
 }

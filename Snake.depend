@@ -6,3 +6,11 @@
 	<conio.h>
 	<time.h>
 
+1635076975 source:d:\00\console-snake\main.cpp
+	<iostream>
+	<cstdlib>
+	<windows.h>
+	<conio.h>
+	<time.h>
+	<fstream>
+
